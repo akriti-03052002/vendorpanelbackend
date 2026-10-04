@@ -44,9 +44,19 @@ const app = express();
 
 app.use(helmet());
 
-const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || "http://localhost:5173")
+// CLIENT_URL and CLIENT_URLS are merged (either may hold a comma-separated
+// list), and each entry is normalised — a pasted trailing slash or wrapping
+// quotes would otherwise never match the browser's Origin header.
+const allowedOrigins = [process.env.CLIENT_URLS, process.env.CLIENT_URL]
+  .filter(Boolean)
+  .join(",")
   .split(",")
-  .map((origin) => origin.trim());
+  .map((origin) => origin.trim().replace(/^["']|["']$/g, "").replace(/\/+$/, ""))
+  .filter(Boolean);
+
+if (allowedOrigins.length === 0) allowedOrigins.push("http://localhost:5173");
+
+console.log("CORS allowed origins:", allowedOrigins.join(", "));
 
 // Vite picks a random port when its default is busy (5173 -> 5174 -> ...),
 // so outside production also allow any localhost/LAN-IP origin regardless

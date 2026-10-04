@@ -1,5 +1,4 @@
 const path = require("path");
-const fs = require("fs");
 const { Readable } = require("stream");
 const { pipeline } = require("stream/promises");
 const cloudinary = require("cloudinary").v2;
@@ -7,8 +6,8 @@ const cloudinary = require("cloudinary").v2;
 /* ============================================================
    FILE STORAGE — CLOUDINARY
    KYC documents, settlement bills and generated partner agreements all
-   live on Cloudinary (Render's disk is wiped on every deploy, so nothing
-   can be kept in backend/uploads there).
+   live on Cloudinary — nothing is ever written to the server's own disk
+   (Render's is wiped on every deploy).
 
    Everything is uploaded as type "authenticated": the file has no public
    URL, and can only be fetched with a URL signed by our API secret. The
@@ -25,9 +24,6 @@ cloudinary.config({
 });
 
 const ROOT_FOLDER = "spotx-partner-panel/partners";
-
-// Rows created before the Cloudinary move point at this folder instead.
-const LEGACY_UPLOAD_ROOT = path.join(__dirname, "..", "uploads", "partners");
 
 // PDFs go up as "raw" so Cloudinary stores and returns the exact bytes
 // (as "image" it would treat them as a transformable, rasterisable asset).
@@ -98,18 +94,14 @@ const signedUrlFor = (file) => {
 };
 
 /**
- * Sends a stored file as the response to a /download route — from
- * Cloudinary, or from local disk for rows that predate it.
+ * Streams a stored file from Cloudinary as the response to a /download
+ * route.
  */
 const sendStoredFile = async (res, file) => {
+  // Rows from before the Cloudinary move pointed at local disk, which no
+  // longer exists — there is nothing to serve for them.
   if (file.storageProvider !== "cloudinary") {
-    const filePath = path.join(LEGACY_UPLOAD_ROOT, file.objectKey);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ success: false, message: "File not found on server." });
-    }
-
-    return res.download(filePath, file.originalName);
+    return res.status(404).json({ success: false, message: "File not found on server." });
   }
 
   const upstream = await fetch(signedUrlFor(file));
