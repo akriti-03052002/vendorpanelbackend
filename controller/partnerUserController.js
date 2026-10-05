@@ -3,6 +3,7 @@ const { PartnerUser } = require("../models/Index");
 const { ROLE_PERMISSIONS, OWNER_ONLY_PERMISSIONS } = require("../config/roles");
 const logActivity = require("../utils/logActivity");
 const { sendMail } = require("../utils/mailer");
+const { getClientUrl } = require("../config/clientUrl");
 
 // Strips document/bank permissions from any custom set — those stay
 // owner-only no matter what a request body tries to grant.
@@ -71,7 +72,7 @@ const inviteTeamMember = async (req, res) => {
       status: "invited"
     });
 
-    const activationLink = `${process.env.CLIENT_URL || "http://localhost:5173"}/partner/reset-password/${rawToken}`;
+    const activationLink = `${getClientUrl()}/partner/reset-password/${rawToken}`;
     const businessName = req.partner.legalEntity?.businessName || "your team";
 
     await sendMail({

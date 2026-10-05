@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { sendMail } = require("../utils/mailer");
+const { getClientUrl } = require("../config/clientUrl");
 
 const RESET_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days — same window as the partner activation link
 
@@ -18,7 +19,7 @@ const sendCustomerSetPasswordEmail = async (customer, { isNewAccount = false } =
   customer.auth.resetTokenExpires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
   await customer.save();
 
-  const link = `${process.env.CLIENT_URL || "http://localhost:5173"}/customer/reset-password/${rawToken}`;
+  const link = `${getClientUrl()}/customer/reset-password/${rawToken}`;
   const subject = isNewAccount ? "Set your SPOTX Customer password" : "Reset your SPOTX Customer password";
 
   await sendMail({

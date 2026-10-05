@@ -7,6 +7,7 @@ const { generatePartnerCode, generateReferralCode } = require("../utils/generate
 const { ROLE_PERMISSIONS } = require("../config/roles");
 const logActivity = require("../utils/logActivity");
 const { sendMail } = require("../utils/mailer");
+const { getClientUrl, buildReferralLink } = require("../config/clientUrl");
 
 // =====================================================
 // GENERATE JWT
@@ -213,7 +214,7 @@ const registerPartner = async (req, res) => {
       referral: referralCode
         ? {
             referralCode,
-            referralLink: `${process.env.CLIENT_URL || "http://localhost:5173"}/partner/register?ref=${referralCode}`
+            referralLink: buildReferralLink(referralCode, partnerType)
           }
         : undefined,
       verification: { overallStatus: "not_submitted" },
@@ -386,7 +387,7 @@ const forgotPassword = async (req, res) => {
     user.auth.resetTokenExpires = new Date(Date.now() + 30 * 60 * 1000);
     await user.save();
 
-    const resetLink = `${process.env.CLIENT_URL || "http://localhost:5173"}/partner/reset-password/${rawToken}`;
+    const resetLink = `${getClientUrl()}/partner/reset-password/${rawToken}`;
 
     await sendMail({
       to: user.email,

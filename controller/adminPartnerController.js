@@ -11,6 +11,7 @@ const { attachPartnerAgreement, issuePartnerAgreementForAssignment } = require("
 const { getRequiredDocumentTypes } = require("../utils/partnerVerification");
 const { sendMail } = require("../utils/mailer");
 const { holdSettlementsForPartner } = require("../utils/settlementHold");
+const { getClientUrl, buildReferralLink } = require("../config/clientUrl");
 
 /* ============================================================
    ADMIN — PARTNER MANAGEMENT
@@ -76,7 +77,7 @@ const createPartner = async (req, res) => {
       partnerType,
       primaryContact: { name: contactName, email: email.toLowerCase().trim(), phone },
       referral: referralCode
-        ? { referralCode, referralLink: `${process.env.CLIENT_URL || "http://localhost:5173"}/partner/register?ref=${referralCode}` }
+        ? { referralCode, referralLink: buildReferralLink(referralCode, partnerType) }
         : undefined,
       verification: { overallStatus: "not_submitted" },
       status: "draft",
@@ -101,7 +102,7 @@ const createPartner = async (req, res) => {
       }
     });
 
-    const loginUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/partner/login`;
+    const loginUrl = `${getClientUrl()}/partner/login`;
 
     // The password is only ever available here, in plaintext, before it's
     // hashed above — this is the one place it can be handed to the partner.

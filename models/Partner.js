@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
+const { buildReferralLink } = require("../config/clientUrl");
 const ObjectId = Schema.Types.ObjectId;
 
 const { PARTNER_TYPES, PARTNER_STATUS, VERIFICATION_STATUS } = require("../config/constant");
@@ -162,5 +163,19 @@ const PartnerSchema = new Schema(
 );
 
 PartnerSchema.index({ partnerType: 1, status: 1 });
+
+// The stored referralLink has whatever frontend URL the backend was
+// configured with when the partner was created baked into it, so it goes
+// stale the moment the frontend moves. Every API response rebuilds it from
+// the referral code and the current CLIENT_URL instead.
+PartnerSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    if (ret.referral?.referralCode) {
+      ret.referral.referralLink = buildReferralLink(ret.referral.referralCode, ret.partnerType || doc.partnerType);
+    }
+
+    return ret;
+  }
+});
 
 module.exports = model("Partner", PartnerSchema);

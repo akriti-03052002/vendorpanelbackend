@@ -11,6 +11,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const { buildReferralLink } = require("../config/clientUrl");
 
 const {
   Partner,
@@ -171,7 +172,7 @@ const run = async () => {
       },
       referral: {
         referralCode: def.referralCode,
-        referralLink: `${CLIENT_URL}/partner/register?ref=${def.referralCode}`
+        referralLink: buildReferralLink(def.referralCode, "vendor")
       },
       verification: { overallStatus: def.verification },
       status: def.status

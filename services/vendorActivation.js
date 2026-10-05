@@ -2,6 +2,7 @@ const { Partner, PartnerNotification } = require("../models/Index");
 const { generateNumericReferralCode } = require("../utils/generateCode");
 const { isPartnerFullyVerified } = require("../utils/partnerVerification");
 const { attachPartnerAgreement } = require("./generatePartnerAgreement");
+const { buildReferralLink } = require("../config/clientUrl");
 
 /**
  * Generates and assigns a Vendor's customer-signup referral code onto an
@@ -29,7 +30,7 @@ const assignReferralCode = async (partner) => {
 
   partner.referral = {
     referralCode,
-    referralLink: `${process.env.CLIENT_URL || "http://localhost:5173"}/customer/register?ref=${referralCode}`
+    referralLink: buildReferralLink(referralCode, "vendor")
   };
 
   return referralCode;
